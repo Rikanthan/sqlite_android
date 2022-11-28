@@ -43,14 +43,27 @@
             android:layout_alignParentLeft="true"
             android:text="@string/name"
             android:textAppearance="?android:attr/textAppearanceMedium" />
-
+        <Button
+            android:id="@+id/choose_image"
+            android:layout_below="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="choose image"
+            android:onClick="chooseImage"/>
+        <ImageView
+            android:id="@+id/show_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/choose_image"
+            android:src="@drawable/ic_launcher_background"
+            android:layout_centerHorizontal="true"/>
         <Button
             android:id="@+id/button1"
             android:layout_width="wrap_content"
+            android:layout_below="@+id/show_image"
             android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/editTextCity"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="28dp"
             android:onClick="run"
             android:text="@string/save" />
 
@@ -122,6 +135,7 @@
             android:layout_below="@+id/editTextName"
             android:ems="10"
             android:inputType="phone|text" />
+
 
     </RelativeLayout>
 </ScrollView>

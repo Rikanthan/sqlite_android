@@ -2,6 +2,9 @@ package com.example.socialmedia;
 
 
 import android.annotation.SuppressLint;
+import android.content.ContentResolver;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -10,25 +13,35 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 
+import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.socialmedia.Sqflite.DBHelper;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 public class DisplayContacts extends Activity {
+    private static final int PICKFILE_RESULT_CODE = 1;
     int from_Where_I_Am_Coming = 0;
     private DBHelper mydb ;
-
+    Bitmap bitmap;
     TextView name ;
     TextView phone;
     TextView email;
     TextView street;
     TextView place;
+    Uri imageUri;
+    ImageView imageView;
     int id_To_Update = 0;
 
     @Override
@@ -40,7 +53,7 @@ public class DisplayContacts extends Activity {
         email = (TextView) findViewById(R.id.editTextStreet);
         street = (TextView) findViewById(R.id.editTextEmail);
         place = (TextView) findViewById(R.id.editTextCity);
-
+        imageView = (ImageView) findViewById(R.id.show_image);
         mydb = new DBHelper(this);
 
         Bundle extras = getIntent().getExtras();
@@ -144,10 +157,8 @@ public class DisplayContacts extends Activity {
                                 startActivity(intent);
                             }
                         })
-                        .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // User cancelled the dialog
-                            }
+                        .setNegativeButton(R.string.no, (dialog, id) -> {
+                            // User cancelled the dialog
                         });
 
                 AlertDialog d = builder.create();
@@ -161,14 +172,44 @@ public class DisplayContacts extends Activity {
         }
     }
 
-    public void run(View view) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data)  {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICKFILE_RESULT_CODE && resultCode == Activity.RESULT_OK) {
+            if(data == null){
+                return;
+            }
+            Uri content_describer = data.getData();
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(),content_describer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            imageView.setImageURI(content_describer);
+        }
+    }
+
+    public void chooseImage(View view){
+        Intent intent=new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(intent,PICKFILE_RESULT_CODE);
+    }
+
+    private String getFileExtension(Uri uri)
+    {
+        ContentResolver cR=getContentResolver();
+        MimeTypeMap mime=MimeTypeMap.getSingleton();
+        return "."+mime.getExtensionFromMimeType(cR.getType(uri));
+    }
+
+    public void run(View view) throws IOException {
         Bundle extras = getIntent().getExtras();
         if(extras !=null) {
             int Value = extras.getInt("id");
             if(Value>0){
                 if(mydb.updateContact(id_To_Update,name.getText().toString(),
                         phone.getText().toString(), email.getText().toString(),
-                        street.getText().toString(), place.getText().toString())){
+                        street.getText().toString(), place.getText().toString(),bitmap)){
                     Toast.makeText(getApplicationContext(), "Updated", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(getApplicationContext(),MainActivity.class);
                     startActivity(intent);
@@ -178,7 +219,7 @@ public class DisplayContacts extends Activity {
             } else{
                 if(mydb.insertContact(name.getText().toString(), phone.getText().toString(),
                         email.getText().toString(), street.getText().toString(),
-                        place.getText().toString())){
+                        place.getText().toString(),bitmap)){
                     Toast.makeText(getApplicationContext(), "done",
                             Toast.LENGTH_SHORT).show();
                 } else{

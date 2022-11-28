@@ -1,5 +1,10 @@
 package com.example.socialmedia.Sqflite;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.Blob;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -11,6 +16,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 
 public class DBHelper extends SQLiteOpenHelper {
 
@@ -22,8 +28,10 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String CONTACTS_COLUMN_STREET = "street";
     public static final String CONTACTS_COLUMN_CITY = "place";
     public static final String CONTACTS_COLUMN_PHONE = "phone";
+    public static final String CONTACT_COLUMN_IMAGE = "image";
     private HashMap hp;
-
+    private ByteArrayOutputStream byteArrayOutputStream;
+    private byte[] imageInByte;
     public DBHelper(Context context) {
         super(context, DATABASE_NAME , null, 1);
     }
@@ -33,7 +41,7 @@ public class DBHelper extends SQLiteOpenHelper {
         // TODO Auto-generated method stub
         db.execSQL(
                 "create table contacts " +
-                        "(id integer primary key, name text,phone text,email text, street text,place text)"
+                        "(id integer primary key, name text,phone text,email text, street text,place text,image blob)"
         );
     }
 
@@ -44,14 +52,21 @@ public class DBHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public boolean insertContact (String name, String phone, String email, String street,String place) {
+    public boolean insertContact (String name, String phone, String email, String street, String place, Bitmap bitmap) throws IOException{
         SQLiteDatabase db = this.getWritableDatabase();
+        //FileInputStream fis = new FileInputStream(imageUri);
+       // byte[] image= new byte[fis.available()];
+        //fis.read(image);
+        byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
+        imageInByte = byteArrayOutputStream.toByteArray();
         ContentValues contentValues = new ContentValues();
         contentValues.put("name", name);
         contentValues.put("phone", phone);
         contentValues.put("email", email);
         contentValues.put("street", street);
         contentValues.put("place", place);
+        contentValues.put("image",imageInByte);
         db.insert("contacts", null, contentValues);
         return true;
     }
@@ -68,14 +83,18 @@ public class DBHelper extends SQLiteOpenHelper {
         return numRows;
     }
 
-    public boolean updateContact (Integer id, String name, String phone, String email, String street,String place) {
+    public boolean updateContact (Integer id, String name, String phone, String email, String street, String place,Bitmap bitmap) throws IOException {
         SQLiteDatabase db = this.getWritableDatabase();
+        byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
+        imageInByte = byteArrayOutputStream.toByteArray();
         ContentValues contentValues = new ContentValues();
         contentValues.put("name", name);
         contentValues.put("phone", phone);
         contentValues.put("email", email);
         contentValues.put("street", street);
         contentValues.put("place", place);
+        contentValues.put("image",imageInByte);
         db.update("contacts", contentValues, "id = ? ", new String[] { Integer.toString(id) } );
         return true;
     }
