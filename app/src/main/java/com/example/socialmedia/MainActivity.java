@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         mydb = new DBHelper(this);
         ArrayList array_list = mydb.getAllContacts();
         ArrayAdapter arrayAdapter=new ArrayAdapter(this,android.R.layout.simple_list_item_1, array_list);
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
+         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
         obj = (ListView)findViewById(R.id.listView1);

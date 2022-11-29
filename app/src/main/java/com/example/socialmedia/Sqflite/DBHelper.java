@@ -35,7 +35,6 @@ public class DBHelper extends SQLiteOpenHelper {
     public DBHelper(Context context) {
         super(context, DATABASE_NAME , null, 1);
     }
-
     @Override
     public void onCreate(SQLiteDatabase db) {
         // TODO Auto-generated method stub
@@ -54,9 +53,6 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public boolean insertContact (String name, String phone, String email, String street, String place, Bitmap bitmap) throws IOException{
         SQLiteDatabase db = this.getWritableDatabase();
-        //FileInputStream fis = new FileInputStream(imageUri);
-       // byte[] image= new byte[fis.available()];
-        //fis.read(image);
         byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG,100,byteArrayOutputStream);
         imageInByte = byteArrayOutputStream.toByteArray();
@@ -74,6 +70,12 @@ public class DBHelper extends SQLiteOpenHelper {
     public Cursor getData(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor res =  db.rawQuery( "select * from contacts where id="+id+"", null );
+        return res;
+    }
+
+    public Cursor getAllData(){
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor res = db.rawQuery("select * from contacts",null);
         return res;
     }
 
@@ -106,9 +108,9 @@ public class DBHelper extends SQLiteOpenHelper {
                 new String[] { Integer.toString(id) });
     }
 
-    @SuppressLint("Range")
+
     public ArrayList<String> getAllContacts() {
-        ArrayList<String> array_list = new ArrayList<String>();
+        ArrayList<String> array_list = new ArrayList<>();
 
         //hp = new HashMap();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -116,9 +118,10 @@ public class DBHelper extends SQLiteOpenHelper {
         res.moveToFirst();
 
         while(res.isAfterLast() == false){
-            array_list.add(res.getString(res.getColumnIndex(CONTACTS_COLUMN_NAME)));
-            res.moveToNext();
+                array_list.add(res.getString(res.getColumnIndexOrThrow(CONTACTS_COLUMN_NAME)));
+                res.moveToNext();
         }
+        System.out.println(array_list.size());
         return array_list;
     }
 }

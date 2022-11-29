@@ -4,6 +4,7 @@ package com.example.socialmedia;
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Activity;
@@ -21,19 +22,23 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.socialmedia.FirebaseDB.FirebaseDB;
 import com.example.socialmedia.Sqflite.DBHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 
 public class DisplayContacts extends Activity {
     private static final int PICKFILE_RESULT_CODE = 1;
     int from_Where_I_Am_Coming = 0;
     private DBHelper mydb ;
+    private FirebaseDB firebaseDB;
     Bitmap bitmap;
     TextView name ;
     TextView phone;
@@ -42,36 +47,54 @@ public class DisplayContacts extends Activity {
     TextView place;
     Uri imageUri;
     ImageView imageView;
+    ProgressBar progressBar;
     int id_To_Update = 0;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_contacts);
         name = (TextView) findViewById(R.id.editTextName);
         phone = (TextView) findViewById(R.id.editTextPhone);
-        email = (TextView) findViewById(R.id.editTextStreet);
-        street = (TextView) findViewById(R.id.editTextEmail);
+        street = (TextView) findViewById(R.id.editTextStreet);
+        email = (TextView) findViewById(R.id.editTextEmail);
         place = (TextView) findViewById(R.id.editTextCity);
         imageView = (ImageView) findViewById(R.id.show_image);
+        progressBar = findViewById(R.id.progressBar);
         mydb = new DBHelper(this);
-
+        firebaseDB = new FirebaseDB();
         Bundle extras = getIntent().getExtras();
         if(extras !=null) {
             int Value = extras.getInt("id");
 
             if(Value>0){
                 //means this is the view part not the add contact part.
+                HashMap user = new HashMap<>();
                 Cursor rs = mydb.getData(Value);
                 id_To_Update = Value;
                 rs.moveToFirst();
 
-                @SuppressLint("Range") String nam = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_NAME));
-                @SuppressLint("Range") String phon = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_PHONE));
-                @SuppressLint("Range") String emai = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_EMAIL));
-                @SuppressLint("Range") String stree = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_STREET));
-                @SuppressLint("Range") String plac = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_CITY));
-
+                @SuppressLint("Range")
+                String nam = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_NAME));
+                @SuppressLint("Range")
+                String phon = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_PHONE));
+                @SuppressLint("Range")
+                String emai = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_EMAIL));
+                @SuppressLint("Range")
+                String stree = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_STREET));
+                @SuppressLint("Range")
+                String plac = rs.getString(rs.getColumnIndex(DBHelper.CONTACTS_COLUMN_CITY));
+                @SuppressLint("Range")
+                byte[] image = rs.getBlob(rs.getColumnIndex(DBHelper.CONTACT_COLUMN_IMAGE));
+                Bitmap bitmap1 = BitmapFactory.decodeByteArray(image,0,image.length);
+                user.put(DBHelper.CONTACTS_COLUMN_NAME,nam);
+                user.put(DBHelper.CONTACTS_COLUMN_PHONE,phon);
+                user.put(DBHelper.CONTACTS_COLUMN_EMAIL,emai);
+                user.put(DBHelper.CONTACTS_COLUMN_STREET,stree);
+                user.put(DBHelper.CONTACTS_COLUMN_CITY,plac);
+                user.put(DBHelper.CONTACTS_COLUMN_ID, String.valueOf(Value));
+                firebaseDB.uploadFile(image,user,progressBar);
                 if (!rs.isClosed())  {
                     rs.close();
                 }
@@ -97,6 +120,8 @@ public class DisplayContacts extends Activity {
                 place.setText((CharSequence)plac);
                 place.setFocusable(false);
                 place.setClickable(false);
+
+                imageView.setImageBitmap(bitmap1);
             }
         }
     }
@@ -195,12 +220,7 @@ public class DisplayContacts extends Activity {
         startActivityForResult(intent,PICKFILE_RESULT_CODE);
     }
 
-    private String getFileExtension(Uri uri)
-    {
-        ContentResolver cR=getContentResolver();
-        MimeTypeMap mime=MimeTypeMap.getSingleton();
-        return "."+mime.getExtensionFromMimeType(cR.getType(uri));
-    }
+
 
     public void run(View view) throws IOException {
         Bundle extras = getIntent().getExtras();

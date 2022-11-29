@@ -58,6 +58,12 @@
             android:layout_below="@+id/choose_image"
             android:src="@drawable/ic_launcher_background"
             android:layout_centerHorizontal="true"/>
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/show_image"
+            android:layout_centerHorizontal="true"/>
         <Button
             android:id="@+id/button1"
             android:layout_width="wrap_content"
